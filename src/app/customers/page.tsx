@@ -1,0 +1,63 @@
+import { Customer } from "@/models/Customer";
+import { Metadata } from "next";
+import Link from "next/link";
+import { Suspense } from "react";
+
+
+export const metadata: Metadata = {
+  title: "Awesome App: Customers",
+  description: "Listing of customers",
+  keywords:["global customers", "tech companies", "fortune 500"]
+};
+
+export default async function CustomerListing() {
+    await new Promise(resolve => setTimeout(resolve,0));
+    return (
+        <div>
+            <h4>Customer Listing</h4>
+            <Suspense fallback={<div className="alert alert-danger"> Loading customers 1 </div>}>
+                <Customers timeout={0}/>
+            </Suspense>
+            <Suspense fallback={<div className="alert alert-warning"> Loading customers 2 </div>}>
+                <Customers timeout={0}/>
+            </Suspense>
+        </div>
+    )
+}
+
+export async function Customers({timeout}: {timeout: number}) {
+    
+    //api call/db call
+    //const url = "http://localhost:9000/customers";
+    await new Promise(resolve => setTimeout(resolve,timeout));
+    console.log("Rendering customers");
+    const url = `${process.env.BASE_URL}/customers`;   
+    //no-store -> ensures it's an ssr
+    const response = await fetch(url,{method: "GET", cache:"no-store"});
+    const customers = await response.json() as Customer[];
+
+    return (
+        <div>
+            <h4>Customers</h4>
+
+            <table className="table">
+                <thead>
+                    <tr>
+                        <th>Customer ID</th>
+                        <th>Name</th>
+                        <th>Location</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {customers.map(customer => (
+                        <tr key = {customer.id}>
+                            <td>{customer.id}</td>
+                            <td><Link href={"/customers/"+customer.id}> {customer.name} </Link> </td>
+                            <td>{customer.location}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    )
+}
